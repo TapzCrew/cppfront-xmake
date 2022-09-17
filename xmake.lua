@@ -15,7 +15,7 @@ target("cpp2-test")
     set_values("c++2.clean_cpp", true)
     set_values("c++2.pure_cpp", true)
     set_values("c++2.null_checks", true)
-    set_values("c++2.subscript_checks", true)
+    set_values("c++2.subscript_checks", false)
 
     set_policy("build.c++.modules", true)
 

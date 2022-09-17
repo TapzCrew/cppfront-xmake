@@ -1,5 +1,7 @@
 main: () -> int = {
-    std::cout << "Hello World" << std::endl;
+    vec: std::vector<int> = (0, 1, 2);
+
+    std::cout << vec[2];
 
     return 0;
 }
