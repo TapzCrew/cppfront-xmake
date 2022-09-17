@@ -1,4 +1,6 @@
 rule("cppfront")
+    add_deps("c++")
+    add_deps("c++.build.modules")
     set_extensions(".cpp2")
 
     on_load(function(target)
@@ -13,6 +15,20 @@ rule("cppfront")
         target:data_set("cppfront_outputdir", outputdir)
     end)
 
+    on_config(function(target)
+        local outputdir = target:data("cppfront_outputdir")
+        for _, sourcebatch in pairs(target:sourcebatches()) do
+            for _, cpp2file in ipairs(sourcebatch.sourcefiles) do
+                local cpp2file_copied = path.join(outputdir, path.filename(cpp2file))
+                local cppfile = cpp2file_copied:sub(1, -2)
+
+                os.touch(cppfile)
+
+                target:add("files", cppfile)
+            end
+        end
+    end)
+
     -- parallel build support to accelerate `xmake build` to build modules
     before_build_files(function(target, batchjobs, sourcebatch, opt)
         import("core.project.depend")
@@ -20,38 +36,44 @@ rule("cppfront")
 
         local outputdir = target:data("cppfront_outputdir")
 
+        local common_flags = { }
+        if target:values("c++2.clean_cpp") then
+            table.insert(common_flags, "-c")
+        end
+        if target:values("c++2.pure_cpp") then
+            table.insert(common_flags, "-p")
+        end
+        if target:values("c++2.add_source_info") then
+            table.insert(common_flags, "-a")
+        end
+        if target:values("c++2.null_checks") then
+            table.insert(common_flags, "-n")
+        end
+        if target:values("c++2.subscript_checks") then
+            table.insert(common_flags, "-s")
+        end
+        if target:values("c++2.debug") then
+            table.insert(common_flags, "-d")
+        end
+
         for _, cpp2file in ipairs(sourcebatch.sourcefiles) do
             local cpp2file_copied = path.join(outputdir, path.filename(cpp2file))
             local cppfile = cpp2file_copied:sub(1, -2)
-            local objectfile = target:objectfile(cppfile:sub(1, -5))
-            if not os.isdir(path.directory(objectfile)) then
-                os.mkdir(path.directory(objectfile))
-            end
 
             opt.rootjob = batchjobs:group_leave() or opt.rootjob
-            batchjobs:group_enter(target:name() .. "/build_cpp2", {rootjob = opt.rootjob})
+            batchjobs:group_enter(target:name() .. "/build_c++2", {rootjob = opt.rootjob})
             batchjobs:addjob(cpp2file, function(index, total)
                 depend.on_changed(function()
                     os.cp(cpp2file, outputdir)
 
-                    local flags = {cpp2file_copied}
-
                     progress.show((index * 100) / total, "${color.build.object}compiling.cpp2 %s", path.filename(cpp2file))
 
-                    if is_plat("windows") then
-                        local compinst = target:compiler("cxx")
-                        local msvc = target:toolchain("msvc")
-                        local _, err = os.iorunv("cppfront", winos.cmdargv(flags))
-                        assert(os.exists(cppfile), err)
-                        os.vrunv(compinst:program(), winos.cmdargv(table.join(compinst:compflags({target = target}), {cppfile, "-Fo" .. objectfile})), {envs = msvc:runenvs()})
-                    else
-                        local compinst = target:compiler("cxx")
-                        local _, err = os.iorunv("cppfront", winos.cmdargv(flags))
-                        assert(os.exists(cppfile), err)
-                        os.vrunv(compinst:program(), table.join(compinst:compflags({target = target}), {cppfile, "-Fo" .. objectfile}))
-                    end
+                    local flags = { cpp2file_copied }
 
-                end, {dependfile = target:dependfile(objectfile), files = {cpp2file}})
+                    local _, err = os.iorunv("cppfront", table.join(flags, common_flags))
+                    assert(os.exists(cppfile), err)
+
+                end, {dependfile = target:dependfile(cppfile), files = {cpp2file}})
             end, { rootjob = opt.rootjob })
 
             sourcebatch.objectfiles = sourcebatch.objectfiles or {}
