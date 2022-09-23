@@ -15,20 +15,7 @@ rule("cppfront")
         target:data_set("cppfront_outputdir", outputdir)
     end)
 
-    on_config(function(target)
-        local outputdir = target:data("cppfront_outputdir")
-        local sourcebatch = target:sourcebatches()["cppfront"]
-        if sourcebatch then
-            for _, cpp2file in ipairs(sourcebatch.sourcefiles) do
-                local cpp2file_copied = path.join(outputdir, path.filename(cpp2file))
-                local cppfile = cpp2file_copied:sub(1, -2)
-
-                -- target:add("files", cppfile, {always_added = true})
-            end
-        end
-    end)
-
-    -- parallel build support to accelerate `xmake build` to build modules
+    -- parallel build support to accelerate `xmake build` 
     before_build_files(function(target, batchjobs, sourcebatch, opt)
         import("core.project.depend")
         import("utils.progress")
