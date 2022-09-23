@@ -87,7 +87,7 @@ rule("cppfront")
                         local msvc = target:toolchain("msvc")
                         os.vrunv(compinst:program(), winos.cmdargv(table.join(compinst:compflags({target = target}), {"/Fo" .. objectfile, cppfile})), {envs = msvc:runenvs()})
                     else
-                        os.vrunv(compinst:program(), winos.cmdargv(table.join(compinst:compflags({target = target}))))
+                        os.vrunv(compinst:program(), table.join(compinst:compflags({target = target}), {"-o", objectfile, cppfile}))
                     end
 
                     depend.save(dependinfo, dependfile)
