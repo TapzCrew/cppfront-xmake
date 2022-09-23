@@ -44,7 +44,6 @@ rule("cppfront")
 
         opt.rootjob = batchjobs:group_leave() or opt.rootjob
         batchjobs:group_enter(target:name() .. "/build_c++2", {rootjob = opt.rootjob})
-        local compinst = target:compiler("cxx")
         for _, cpp2file in ipairs(sourcebatch.sourcefiles) do
             local cpp2file_copied = path.join(outputdir, path.filename(cpp2file))
             local cppfile = cpp2file_copied:sub(1, -2)
