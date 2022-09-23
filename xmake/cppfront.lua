@@ -19,6 +19,7 @@ rule("cppfront")
     before_build_files(function(target, batchjobs, sourcebatch, opt)
         import("core.project.depend")
         import("utils.progress")
+        import("core.tool.compiler")
 
         local outputdir = target:data("cppfront_outputdir")
         local common_flags = { }
@@ -63,19 +64,11 @@ rule("cppfront")
                     local _, err = os.iorunv("cppfront", table.join(flags, common_flags))
                     assert(err == "", err)
 
-                    progress.show((index * 100) / total, "${color.build.object}compiling.cpp %s", cpp2file)
-
-                    compinst:compile(cppfile)                    local compinst = target:compiler("cxx")
-
                     if not os.isdir(path.directory(objectfile)) then
                         os.mkdir(path.directory(objectfile))
                     end
-                    if is_plat("windows") then
-                        local msvc = target:toolchain("msvc")
-                        os.vrunv(compinst:program(), winos.cmdargv(table.join(compinst:compflags({target = target}), {"/Fo" .. objectfile, cppfile})), {envs = msvc:runenvs()})
-                    else
-                        os.vrunv(compinst:program(), table.join(compinst:compflags({target = target}), {"-o", objectfile, cppfile}))
-                    end
+
+                    compiler.compile(cppfile, objectfile, {target = target})
 
                     depend.save(dependinfo, dependfile)
 
