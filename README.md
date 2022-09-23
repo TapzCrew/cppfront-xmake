@@ -12,4 +12,5 @@ Simple demonstration of Herb Sutter cppfront <https://github.com/hsutter/cppfron
 > xmake run # to run the executable
 ``` 
 
-![image](https://user-images.githubusercontent.com/27437334/192007455-fee0edb1-7d55-43a4-a6e9-13122a9ddbb5.png)
+![image](https://user-images.githubusercontent.com/27437334/192008528-2c1b5047-2629-45d2-92ca-0b4612eff6dc.png)
+
